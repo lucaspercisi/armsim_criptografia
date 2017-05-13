@@ -44,7 +44,7 @@ INSTRUÇÕES:
 			./arm-none-eabi-ld -T mapa.lds -o test test.o
 	
 	Windows: 
-			arm-none-eabi-ld -T mapa.lds -o test test.o
+			arm-none-eabi-ld.exe -T mapa.lds -o test test.o
 
 - Por fim, o simulador:
 
