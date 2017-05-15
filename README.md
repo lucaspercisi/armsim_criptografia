@@ -27,7 +27,8 @@ O trabalho será realizado por:
 
 A entrega e apresentação na data: 31/05/2017
 ____________________________________________________
-INSTRUÇÕES: 
+
+=================== INSTRUÇÕES =====================
 
 - Abra o terminal no local dos arquivos do repósitório.
 - Execute o montador:
@@ -44,7 +45,7 @@ INSTRUÇÕES:
 			./arm-none-eabi-ld -T mapa.lds -o test test.o
 	
 	Windows: 
-			arm-none-eabi-ld.exe -T mapa.lds -o test test.o
+			arm-none-eabi-ld -T mapa.lds -o test test.o
 
 - Por fim, o simulador:
 
@@ -58,3 +59,4 @@ INSTRUÇÕES:
 - No simulador, execute "g _start" para iniciar a simulção.
 - Caso tenha dúvidas com o simulador, execute 'h' para ver as opções de Help.
 ____________________________________________________
+====================================================
