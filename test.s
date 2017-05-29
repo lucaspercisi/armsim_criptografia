@@ -1,7 +1,32 @@
 @========================================= CABEÇALHO ============================================  
 @  
-@
-@	O montador decide a alocação da memória.
+@	UNIVERSIDADE FEDERAL DA FRONTEIRA SUL											28/05/2017
+@	Curso de Ciência da Computação
+@	
+@	Trabalho da disciplina de Organização de COMPUTADORES
+@	Professor: Adriano Sanick Padilha
+@	
+@	Alunos:	Lucas Percisi 
+@			Rafael Nascimento
+@			Eduardo Stefanello
+@			
+@	Arquitetura: ARM7 
+@	
+@	Descrição: 	O trabalho consiste em ler uma mensagem passada pelo usuario 
+@				através do console, criptografar a mensagem, mostrar a mensagem
+@				criptografada, solicitar uma chave de descriptografia através de um teclado virtual,
+@				descriptografar a mensagem e por fim mostra-la no console.
+@				Será utilizado um simulador do processador ARM7
+@				de autoria de Ricardo Anido, disponível em:
+@				http://www.ic.unicamp.br/~ranido/livrolm/ferramentas/arm.html
+@	
+@	OBSERVAÇÕES SOBRE O PROGRAMA:
+@	
+@	- 	A mensagem deve ter no máximo 128 caracters (pode ser modificado).
+@	-	A chave tem 16 digitos (pode ser modificado). "*1347 1118 2947 7613#"
+@	-	O montador decide a alocação da memória.
+@	- 	No fim da simulação ocorre a limpeza de todos os buffers. 
+@		Para verificaçoes pós simulação deve-se comentar as linhas do código que fazem a limpeza. 
 @
 @
 @================================= ENDEREÇO DOS DISPOSOTIVOS ====================================	
@@ -12,11 +37,9 @@
 @========================================= CONSTANTES ===========================================
 	
 	.equ KBD_READY,		1			@CONTANTE DE VERIFICAÇÃO DO TECLADO PRESSIONADO
-	.equ SIZE_MSG,		128			@TAMANHO MÁXIMO DA MENSAGEM EM CARACTERES
+	.equ SIZE_MSG,		127			@TAMANHO MÁXIMO DA MENSAGEM EM CARACTERES + 0 NA CONTAGEM (128)
 	.equ SIZE_KBD_KEY,	16			@QUANTIDADE DE DIGITOS DA CHAVE DE CRIPTOGRAFIA
-	
-	.equ KEY,			7			@ZOERA
-	
+		
 @=========================================== INÍCIO =============================================
 _start:
 	
@@ -49,6 +72,7 @@ read_msg:
 	@REMOVE O CARACTER 'ENTER' DA MENSAGEM
 	
 	mov		r0, #0					@VALOR PARA MANIPULAÇÃO DO DESLOCAMENTO	
+	
 	search_caracter:  
 	
 		ldr 	r2, =buf_in_msg 	@ENDEREÇO DA MENSAGEM
@@ -84,6 +108,7 @@ encryption:
 		ldr		r4, =mapa_caracters			@CARREGA R4 COM ENDEREÇO DO MAPA DE CARACTRES
 		
 		ldrb	r5, [r0, r12]				@COLOCA O R5 O CARACTER SUBSEQUENTE
+		
 		cmp		r5, #0						@VERIFICA SE A MENSAGEM CHEGOU AO FIM
 		beq		crypto_finish				@TERMINA A CRIPTOGRAFIA
 		
@@ -91,6 +116,7 @@ encryption:
 		add		r7, r5, r6					@SOMA O CARACTER ASCII COM O DIGITO DA CHAVE
 		
 		
+		@SUBTRAI O NÚMERO DE VOLTAS DESNECESSÁRIAS DO MAPA DE CARACTER
 		sub_byte_init:
 		
 			cmp		r7, #64					@COMPARA COM O TAMANHO DO MAPA DE CARACTER
@@ -98,16 +124,18 @@ encryption:
 			sub		r7, r7, #64				@SENÃO SUBTRAI 64 (1 VOLTA DO MAPA)
 			add		r10, r10, #1			@SOMA 1 NO CONTADOR DE VOLTAS
 			b 		sub_byte_init			@VERIFICA NOVAMENRE
-			
+		
+		@MAPEIA NA MEMÓRIA A QUANTIDADE DE VOLTAS SUBTRAÍDA DE CADA CARACTER
 		save_byte_cripto:
 			
 			strb 	r10, [r3, r12]			@GUARDA NA MEMÓRIA QUANTIDADE DE VOLTAS DO CARACTER
-			ldrb	r7, [r4, r7]			@CARREGA EM R7 O CARACTER EQUIAVLENTE NO MAPA DE MEMORIA
+			ldrb	r7, [r4, r7]			@CARREGA EM R7 O CARACTER EQUIVALENTE NO MAPA DE MEMORIA
 			strb	r7, [r2 , r12]			@GUARDO NA MEMORIA O CARACTER CRIPTOGRAFADO
-			add 	r12, r12, #1			@INCREMENTA O DESLOCAMENTO PARA O CARACTER SUBSEQUENTE
 			
+			add 	r12, r12, #1			@INCREMENTA O DESLOCAMENTO PARA O CARACTER SUBSEQUENTE
 			add 	r9, r9, #1				@INCREMENTA CONTADOR DE DESLOCAMENTO DA CHAVE
-			cmp		r9, #SIZE_KBD_KEY		@COMPRA COM O TAMANHO DA CHAVE
+			
+			cmp		r9, #SIZE_KBD_KEY		@COMPARA COM O TAMANHO DA CHAVE
 			bne		crypto_init				@SE A CHAVE É MENOR QUE O TAMNANHO, CRIPTA O PROXIMO CHAR
 			mov 	r9, #0					@SENÃO A CHAVE É O PRIMEIRO DIGITO DA KEY
 			
@@ -142,36 +170,41 @@ encryption:
 	mov    	r7, #4					@R7 DEVE SER 4 POR ORIENTAÇÃO DO DESENVOLVEDOR      	
 	svc    	#0x55       	 		@FAZ A CHAMADA DO CONSOLE CONFORME OS PARAMETROS ANTERIORES
 	
-	mov		r5, #0
-	
 	b		read_kbd_asterisco		@VAI PARA LEITURA DO TECLADO VIRTUAL
 	
 	
 @------------------------------------------------------------------------------------------------	
-@LÊ O TECLADO VIRTUAL
-	
-read_kbd_asterisco:
 
-	@EXIGE O USUÁRIO PRESSIONAR '*' PARA INSERIR A CHAVE
+@EXIGE O USUÁRIO PRESSIONAR '*' PARA INSERIR A CHAVE	
+read_kbd_asterisco:
+		
+	mov		r5, #0						@REG UTILIZADO PARA DESLOCAMENTO NA MOMENTE DE SALVAR O DIGITO
+
+read_kbd_asterisco_init:
+
+	@AGUARDA A TECLA SER PRESSIONADA
 	
-	ldr		r3, =KBD_STATUS			@ATRIBUUI AO R1 O ENDEREÇO DE STATUS DO TECLADO
-	ldr		r4, [r3]				@CARREGA NO R4 O VALOR DO ENDEREÇO R3
-	cmp     r4, #KBD_READY			@COMPARA R4 COM 0x1
-	bne    	read_kbd_asterisco		@DESVIA SE VERDADEIRO
+	ldr		r3, =KBD_STATUS				@ATRIBUUI AO R1 O ENDEREÇO DE STATUS DO TECLADO
+	ldr		r4, [r3]					@CARREGA NO R4 O VALOR DO ENDEREÇO R3
+	cmp     r4, #KBD_READY				@COMPARA R4 COM 0x1
+	bne    	read_kbd_asterisco_init		@DESVIA SE VERDADEIRO
 	
-	ldr		r3, =KBD_DATA			@CARREGA EM R3 O VALOR NO ENDEREÇO DE DADOS DO TECLADO
-	ldr		r4, [r3]				@CARREGA EM R4 O CONTEUDO DO ENDEREÇO DE R3
-	cmp		r4, #10					@COMPARA COM O BOTÃO '*' DO TECLADO VIRTUAL
-	bne		read_kbd_asterisco		@SE DIFERENTE VOLTA A MONITORAR A TECLA
+	@VERIFICA SE '*' FOI PRESSIONADO
+	
+	ldr		r3, =KBD_DATA				@CARREGA EM R3 O VALOR NO ENDEREÇO DE DADOS DO TECLADO
+	ldr		r4, [r3]					@CARREGA EM R4 O CONTEUDO DO ENDEREÇO DE R3
+	cmp		r4, #10						@COMPARA COM O BOTÃO '*' DO TECLADO VIRTUAL
+	bne		read_kbd_asterisco_init		@SE DIFERENTE VOLTA A MONITORAR A TECLA
 	
 	
 	@EXIBE UM ASTERISCO DEVIDO APERTO DE TECLA
 	
-	mov    	r0, #1  				@MODO ESCRITA (STDOUT)   	
-	ldr    	r1,	=asterisk	 		@ENDEREÇO INICIAL DA ESCRITA
-	ldr    	r2, =size_asterisk		@TAMANHO DA DOS DADOS A SEREM ESCRITOS
-	mov    	r7, #4					@R7 DEVE SER 4 POR ORIENTAÇÃO DO DESENVOLVEDOR      	
-	svc    	#0x55       	 		@FAZ A CHAMADA DO CONSOLE CONFORME OS PARAMETROS ANTERIORES
+	mov    	r0, #1  					@MODO ESCRITA (STDOUT)   	
+	ldr    	r1,	=asterisk	 			@ENDEREÇO INICIAL DA ESCRITA
+	ldr    	r2, =size_asterisk			@TAMANHO DA DOS DADOS A SEREM ESCRITOS
+	mov    	r7, #4						@R7 DEVE SER 4 POR ORIENTAÇÃO DO DESENVOLVEDOR      	
+	svc    	#0x55       	 			@FAZ A CHAMADA DO CONSOLE CONFORME OS PARAMETROS ANTERIORES
+	
 	
 read_kbd:
 	
@@ -218,6 +251,7 @@ save_data_kbd:
 	bcc		read_kbd				@SE DESLOCAMENTO MENOR QUE MEMÓRIA RESERVADA, NÃO SALVA E LÊ OUTRO CARACTER 
 
 	@AQUI ACONTECE O SALVAMENTO NA MEMÓRIA 		
+
 	ldr 	r6, =buf_kbd_key		@R6 CONTÉM O ENDEREÇO DO BUFFER DO TECLADO	
 	strb	r4, [r6, r5]			@ARMAZENA O LBS DE R4 NO BUFFER DO TECLADO 
 	add 	r5, r5, #1				@INCREMENTA O DESLOCAMENTO
@@ -248,6 +282,7 @@ decryption:
 		
 		mov		r10, #0
 		
+		@PROCURA O CARACTER NO MAPA
 		search_char:
 		
 			ldrb	r6, [r4, r10]			@SENÃO CARREGA EM R6 O CHAR DO SUBSEQUENTE DO MAPA
@@ -255,12 +290,14 @@ decryption:
 			beq		decrypto				@SE ENCONTRO DESCRIPTA
 			add 	r10, r10, #1			@SENÃO INCREMENTA DESLOCAMENTO DO MAPA
 			b 		search_char				@VOLTA A ACOMPARAR COM O PROXIMO CHAR DO MAPA
-
+		
+		
 		decrypto:
 						
 			mov 	r8, #0					@R8 TERÁ O VALOR DE VOLTAS * 64
 			ldrb 	r7, [r3, r12]			@CERREGA EM R7 QTD DE VOLTAS DE CADA CHAR
-		
+			
+			@MULTIPLICA A QUANTIDADE DE VOLTAS DESCONTADO ANTERIORMENTE
 			multi_turns:
 				
 				cmp		r7 , #0				@COMPARA QTD DE VOLTAS COM 0
@@ -272,17 +309,17 @@ decryption:
 			multi_turns_end:
 				
 				
-				add 	r8, r8, r10			@					
+				add 	r8, r8, r10			@GUARDA EM R8 A SOMA DA QUANTIDADE DE VOLTAS COM O DESLOCAMENTO DO CHAR	DO MAPA				
 				ldrb 	r6, [r1, r9]		@CARREGA EM R8 A CHAVE DO CHAR DE ENTRADA
-				sub 	r5, r8, r6			@DIMINUI O CHAR DA MSG CRIPTO DO VALOR DA CHAVE
+				sub 	r5, r8, r6			@SUBTRAI DO CHAR DA MSG CRIPTOGRAFADA O VALOR DA CHAVE CORRESPONDENTE
 				strb 	r5, [r0, r12]		@GUARDA NA MEMORIA O RESULTADO DE DESCRITOGRAFIA
 				
 				add 	r12, r12, #1		@INCREMENTA DESLOCAMENTO DA MENSAGEM
 				add 	r9, r9, #1			@INCREMENMTA DESLOCAMENTO DA CHAVE
 				
-				cmp		r9, #SIZE_KBD_KEY
-				bne		decrypto_init
-				mov 	r9, #0
+				cmp		r9, #SIZE_KBD_KEY	@COMPARA COM O TAMANHO DA CHAVE
+				bne		decrypto_init		@SE DIFERENTE, CONTINUA COM O PRÓXIMO DIGITO
+				mov 	r9, #0				@SENÃO CONTINUA COM O PRIMEIRO DIGITO
 				
 				b		decrypto_init		@TUDO DENOVO PARA O PROXIMO CARACTER
 	
@@ -316,28 +353,30 @@ exit_prog:
 	@ROTINA PARA LIMPEZA COMPLETA DOS BUFFERS (NECESSÁRIO PARA SIMULAÇÃO DIRETA, SEM MONTAGEM).	
 	
 	mov 	r0, #0					@LIMPA R0
-	add 	r0, r0, #SIZE_MSG		@OS 4 COMANDOS A SEGUIR É PARA SOMAR A QUANTIDADE
-	add 	r0, r0, #SIZE_MSG		@DE MEMÓRIA TOTAL RESERVADA QUE QUERO LIMPAR,
-	add 	r0, r0, #SIZE_MSG		@MEMÓRIA SEQUENCIALMENTE CONFORME DECLARADO EM CÓDIGO
-	add 	r0, r0, #SIZE_MSG
-	add 	r0, r0, #SIZE_MSG
-	add 	r0, r0, #SIZE_KBD_KEY	@
-	sub		r0, r0, #4 
-	mov 	r1, #0					@DADO A SER GRAVADO NA MEMPRIA
+	
+	add 	r0, r0, #SIZE_MSG		@----------------------------------------------------
+	add 	r0, r0, #SIZE_MSG		@SOMATÓRIO DA QUANTIDADE DE MEMÓRIA PARA REALIZAR
+	add 	r0, r0, #SIZE_MSG		@A LIMPEZA DOS BUFFERS DE UMA VEZ SÓ. APROVEITANDO QUE
+	add 	r0, r0, #SIZE_MSG		@A ALOCAÇÃO OCORRE EM SÉRIE NA MONTAGEM CONFORME DESCRITO EM CÓDIGO.
+	add 	r0, r0, #SIZE_KBD_KEY	@----------------------------------------------------
+	
+	sub		r0, r0, #4 				@DESCONTA 1 BYTE PARA CONSIDERAR 0 NA CONTAGEM
+	mov 	r1, #0					@DADO A SER GRAVADO NA MEMÓRIA
 	ldr		r2, =buf_in_msg			@R2 TEM O ENDEREÇO INICIAL DA LIMPEZA
 	
+	@b		finish_console			@COMENTAR PARA LIMPAR OS BUFFERS
 	
 	clear_intit:	
 
-		str		r1, [r2, r0]			@LIMPA DE TRÁS PARA FRENTE (DESLOCAMENTO MÁXIMO)
-		sub		r0, r0, #4				@SUBTRAI O DESLOCAMENTO EM 1 WORD
-		cmp		r0, #0					@COMPARA SE CHEGOU A ZERO
-		bne		clear_intit				@SE NÃO É ZERO, LIMPA A WORD ANTERIOR
-		str		r1, [r2]				@SE FOR ZERO LIMPA A WORD INICIAL
+		str		r1, [r2, r0]		@LIMPA DE TRÁS PARA FRENTE (DESLOCAMENTO MÁXIMO)
+		sub		r0, r0, #4			@SUBTRAI O DESLOCAMENTO EM 1 WORD
+		cmp		r0, #0				@COMPARA SE CHEGOU A ZERO
+		bne		clear_intit			@SE NÃO É ZERO, LIMPA A WORD ANTERIOR
+		str		r1, [r2]			@SE FOR ZERO LIMPA A WORD INICIAL
 	
 	
 	@FINALIZAÇÃO DO CONSOLE	CONFORME DESENVOLVEDOR
-	
+	finish_console:
 	mov     r0, #0      			
 	mov     r7, #1      
 	svc     #0x55
@@ -349,11 +388,10 @@ exit_prog:
 buf_in_msg:			.skip	SIZE_MSG				@BUFFER DA MENSAGEM 
 buf_out_msg:		.skip	SIZE_MSG				@BUFFER DA MENSAGEM DESCRIPTOGRAFADA
 buf_msg_encrypted:	.skip	SIZE_MSG				@BUFFER DA MENSAGEM CRIPTOGRAFADA 
+buf_char_turns:		.skip	SIZE_MSG				@BUFFER DA QUANTIDADE VOLTA NO MAPA DE CARACTER
 buf_kbd_key:		.skip	SIZE_KBD_KEY			@BUFFER DA CHAVE DE CRIPTOGRAFIA
-buf_char_turns:		.skip	SIZE_MSG
-buf_test:			.skip	SIZE_MSG
 
-@MAPA DE CARACTERES UTILIZADO NA CRIPTOGRAFIA
+@MAPA DE CARACTERES PERSONALIZADO UTILIZADO NA CRIPTOGRAFIA
 mapa_caracters: 	.byte 	0X40,0x30,0x31,0x32		@@,0,1,2
 					.byte	0x33,0x34,0x35,0x36		@3,4,5,6	
 					.byte	0x37,0x38,0x39,0x61		@7,8,9,a
@@ -370,13 +408,14 @@ mapa_caracters: 	.byte 	0X40,0x30,0x31,0x32		@@,0,1,2
 					.byte	0x50,0x51,0x52,0x53		@P,Q,R,S		
 					.byte	0x54,0x55,0x56,0x57		@T,U,V,W
 					.byte	0x58,0x59,0x5A,0x24		@X,Y,Z,$
-					
+
+@CHAVE ESCOLHIDA PARA CRIPTOGRAFIA					
 key:				.byte	0x01,0x03,0x04,0x07 	@CHAVE DE CRIPTOGRAFIA
 					.byte	0x01,0x01,0x01,0x08		@1347 1118 2947 7613
 					.byte	0x02,0x09,0x04,0x07		@FIBONACCI COM 1 E 3 ATÉ 16 CHAR EXCLUIDO O ULTIMO 2
 					.byte	0x07,0x06,0x01,0x03		@BY RAFAEL
 					
-@=============================== MENSAGEM PARA EXIBUÇÃO NO CONSOLE ==============================
+@=============================== MENSAGENS PARA EXIBIÇÃO NO CONSOLE ==============================
 
 intro_msg:
 	.ascii "\n ===================================================================================="
