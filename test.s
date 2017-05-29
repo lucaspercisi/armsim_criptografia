@@ -13,7 +13,7 @@
 	
 	.equ KBD_READY,		1			@CONTANTE DE VERIFICAÇÃO DO TECLADO PRESSIONADO
 	.equ SIZE_MSG,		128			@TAMANHO MÁXIMO DA MENSAGEM EM CARACTERES
-	.equ SIZE_KBD_KEY,	17			@QUANTIDADE DE DIGITOS DA CHAVE DE CRIPTOGRAFIA
+	.equ SIZE_KBD_KEY,	16			@QUANTIDADE DE DIGITOS DA CHAVE DE CRIPTOGRAFIA
 	
 	.equ KEY,			7			@ZOERA
 	
@@ -250,7 +250,6 @@ decryption:
 		
 		search_char:
 		
-	
 			ldrb	r6, [r4, r10]			@SENÃO CARREGA EM R6 O CHAR DO SUBSEQUENTE DO MAPA
 			cmp		r5, r6					@COMPARA SE CHAR DA CRIPTO = CHAR DO MAPA
 			beq		decrypto				@SE ENCONTRO DESCRIPTA
@@ -273,27 +272,14 @@ decryption:
 			multi_turns_end:
 				
 				
-				add 	r6, r6, r8			@SOMA QTD DE VOLTAS COM CHAR DA MSG CRIPTO	
-							
-				ldrb 	r8, [r1, r9]		@CARREGA EM R8 A CHAVE DO CHAR DE ENTRADA
-				
-	
+				add 	r8, r8, r10			@					
+				ldrb 	r6, [r1, r9]		@CARREGA EM R8 A CHAVE DO CHAR DE ENTRADA
 				sub 	r5, r8, r6			@DIMINUI O CHAR DA MSG CRIPTO DO VALOR DA CHAVE
 				strb 	r5, [r0, r12]		@GUARDA NA MEMORIA O RESULTADO DE DESCRITOGRAFIA
 				
-					
-				ldr 	r7,	=buf_test
-				strb 	r6, [r7, r12]
-		
-				
-				
-				
-				
-				
-				
 				add 	r12, r12, #1		@INCREMENTA DESLOCAMENTO DA MENSAGEM
-				
 				add 	r9, r9, #1			@INCREMENMTA DESLOCAMENTO DA CHAVE
+				
 				cmp		r9, #SIZE_KBD_KEY
 				bne		decrypto_init
 				mov 	r9, #0
@@ -332,7 +318,10 @@ exit_prog:
 	mov 	r0, #0					@LIMPA R0
 	add 	r0, r0, #SIZE_MSG		@OS 4 COMANDOS A SEGUIR É PARA SOMAR A QUANTIDADE
 	add 	r0, r0, #SIZE_MSG		@DE MEMÓRIA TOTAL RESERVADA QUE QUERO LIMPAR,
-	add 	r0, r0, #SIZE_KBD_KEY	@MEMÓRIA SEQUENCIALMENTE CONFORME DECLARADO EM CÓDIGO
+	add 	r0, r0, #SIZE_MSG		@MEMÓRIA SEQUENCIALMENTE CONFORME DECLARADO EM CÓDIGO
+	add 	r0, r0, #SIZE_MSG
+	add 	r0, r0, #SIZE_MSG
+	add 	r0, r0, #SIZE_KBD_KEY	@
 	sub		r0, r0, #4 
 	mov 	r1, #0					@DADO A SER GRAVADO NA MEMPRIA
 	ldr		r2, =buf_in_msg			@R2 TEM O ENDEREÇO INICIAL DA LIMPEZA
@@ -340,11 +329,11 @@ exit_prog:
 	
 	clear_intit:	
 
-		@str		r1, [r2, r0]			@LIMPA DE TRÁS PARA FRENTE (DESLOCAMENTO MÁXIMO)
-		@sub		r0, r0, #4				@SUBTRAI O DESLOCAMENTO EM 1 WORD
-		@cmp		r0, #0					@COMPARA SE CHEGOU A ZERO
-		@bne		clear_intit				@SE NÃO É ZERO, LIMPA A WORD ANTERIOR
-		@str		r1, [r2]				@SE FOR ZERO LIMPA A WORD INICIAL
+		str		r1, [r2, r0]			@LIMPA DE TRÁS PARA FRENTE (DESLOCAMENTO MÁXIMO)
+		sub		r0, r0, #4				@SUBTRAI O DESLOCAMENTO EM 1 WORD
+		cmp		r0, #0					@COMPARA SE CHEGOU A ZERO
+		bne		clear_intit				@SE NÃO É ZERO, LIMPA A WORD ANTERIOR
+		str		r1, [r2]				@SE FOR ZERO LIMPA A WORD INICIAL
 	
 	
 	@FINALIZAÇÃO DO CONSOLE	CONFORME DESENVOLVEDOR
@@ -382,10 +371,10 @@ mapa_caracters: 	.byte 	0X40,0x30,0x31,0x32		@@,0,1,2
 					.byte	0x54,0x55,0x56,0x57		@T,U,V,W
 					.byte	0x58,0x59,0x5A,0x24		@X,Y,Z,$
 					
-key:				.byte	0x03,0x01,0x06,0x07 	@CHAVE DE CRIPTOGRAFIA
-					.byte	0x07,0x04,0x09,0x02		@1347 1118 2947 7613
-					.byte	0x08,0x01,0x01,0x01		@FIBONACCI COM 1 E 3 ATÉ 16 CHAR EXCLUIDO O ULTIMO 2
-					.byte	0x07,0x04,0x03,0x01		@BY RAFAEL
+key:				.byte	0x01,0x03,0x04,0x07 	@CHAVE DE CRIPTOGRAFIA
+					.byte	0x01,0x01,0x01,0x08		@1347 1118 2947 7613
+					.byte	0x02,0x09,0x04,0x07		@FIBONACCI COM 1 E 3 ATÉ 16 CHAR EXCLUIDO O ULTIMO 2
+					.byte	0x07,0x06,0x01,0x03		@BY RAFAEL
 					
 @=============================== MENSAGEM PARA EXIBUÇÃO NO CONSOLE ==============================
 

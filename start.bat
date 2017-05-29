@@ -37,4 +37,6 @@ TESTE
 	4c																	Char resultando em ASCII
 	L																	Char resultante
 	
-	
+	r5 letra msg
+	r6 caracter mapa
+	r10 deslocamento do caracter
