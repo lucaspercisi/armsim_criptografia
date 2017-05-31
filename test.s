@@ -3,7 +3,7 @@
 @	UNIVERSIDADE FEDERAL DA FRONTEIRA SUL											28/05/2017
 @	Curso de Ciência da Computação
 @	
-@	Trabalho da disciplina de Organização de COMPUTADORES
+@	Trabalho da disciplina de Organização de Computadores
 @	Professor: Adriano Sanick Padilha
 @	
 @	Alunos:	Lucas Percisi 
@@ -23,10 +23,18 @@
 @	OBSERVAÇÕES SOBRE O PROGRAMA:
 @	
 @	- 	A mensagem deve ter no máximo 128 caracters (pode ser modificado).
+@
 @	-	A chave tem 16 digitos (pode ser modificado). "*1347 1118 2947 7613#"
+@
 @	-	O montador decide a alocação da memória.
+@
 @	- 	No fim da simulação ocorre a limpeza de todos os buffers. 
-@		Para verificaçoes pós simulação deve-se comentar as linhas do código que fazem a limpeza. 
+@		Para verificaçoes pós simulação deve-se descomentar a linha 
+@		do código que habilita a limpeza (linha 375). 
+@	
+@	-	Para entender com maior facilidade funcionamento da criptografia 
+@		deve-se ler o arquivo "funcionamento_da_criptografia.pdf"
+@		na pasta "documentação" deste repositório. 
 @
 @
 @================================= ENDEREÇO DOS DISPOSOTIVOS ====================================	
@@ -45,7 +53,6 @@ _start:
 	
 	b 		read_msg	
 
-@========================================== SUB-ROTINAS =========================================	
 @------------------------------------------------------------------------------------------------
 @LÊ A MENSAGEM PARA CRIPTOGRAFAR
 
@@ -153,7 +160,7 @@ encryption:
 	svc     #0x55       	 		@FAZ A CHAMADA DO CONSOLE CONFORME OS PARAMETROS ANTERIORES
 	
 
-	@EXIBE MENSAGEM DE ENCRIPTADA
+	@EXIBE MENSAGEM ENCRIPTADA
 	
 	mov     r0, #1   				@MODO ESCRITA (STDOUT)   	
 	ldr     r1, =buf_msg_encrypted	@ENDEREÇO INICIAL DA ESCRITA
@@ -178,7 +185,7 @@ encryption:
 @EXIGE O USUÁRIO PRESSIONAR '*' PARA INSERIR A CHAVE	
 read_kbd_asterisco:
 		
-	mov		r5, #0						@REG UTILIZADO PARA DESLOCAMENTO NA MOMENTE DE SALVAR O DIGITO
+	mov		r5, #0						@REG UTILIZADO PARA DESLOCAMENTO NO MOMENTE DE SALVAR O DIGITO
 
 read_kbd_asterisco_init:
 
@@ -248,8 +255,9 @@ save_data_kbd:
 	mov		r10, #SIZE_KBD_KEY		@TAMANHO DA CHAVE NO R10
 	sub		r10, r10, #1			@DECREMENTA R10 (CONSIDERAÇÃO DE 0 NA CONTAGEM)
 	cmp 	r10, r5					@COMPARA COM O DESLOCAMENTO DE ESCRITA DA CHAVE
-	bcc		read_kbd				@SE DESLOCAMENTO MENOR QUE MEMÓRIA RESERVADA, NÃO SALVA E LÊ OUTRO CARACTER 
+	bcc		read_kbd				@SE DESLOCAMENTO MAIOR QUE MEMÓRIA RESERVADA, NÃO SALVA E LÊ OUTRO CARACTER 
 
+	
 	@AQUI ACONTECE O SALVAMENTO NA MEMÓRIA 		
 
 	ldr 	r6, =buf_kbd_key		@R6 CONTÉM O ENDEREÇO DO BUFFER DO TECLADO	
@@ -264,8 +272,7 @@ save_data_kbd:
 
 decryption:
 		
-		mov 	r12, #0						@LIMPA CONTADOR QUE SERÁ USADO COMO DESLOCAMENTO DA MENSAGEM
-		mov		r10, #0						@LIMPA CONTADOR QUE SERÁ USADO COMO DESLOCAMENTO DO MAPA
+		mov 	r12, #0						@LIMPA CONTADOR QUE SERÁ USADO COMO DESLOCAMENTO DA MENSAGEM					
 		mov 	r9, #0						@LIMPA CONTADOR QUE SERÁ USADO COMO DESLOCAMENTO DA CHAVE
 		
 	decrypto_init:
@@ -280,7 +287,7 @@ decryption:
 		cmp		r5, #0						@VERIFICA SE A MENSAGEM CHEGOU AO FIM
 		beq 	decrypto_end				@FINALIZA A DESCRIPTO
 		
-		mov		r10, #0
+		mov		r10, #0						@LIMPA CONTADOR QUE SERÁ USADO COMO DESLOCAMENTO DO MAPA
 		
 		@PROCURA O CARACTER NO MAPA
 		search_char:
@@ -364,8 +371,9 @@ exit_prog:
 	mov 	r1, #0					@DADO A SER GRAVADO NA MEMÓRIA
 	ldr		r2, =buf_in_msg			@R2 TEM O ENDEREÇO INICIAL DA LIMPEZA
 	
+	@---------------------
 	@b		finish_console			@COMENTAR PARA LIMPAR OS BUFFERS
-	
+	@---------------------
 	clear_intit:	
 
 		str		r1, [r2, r0]		@LIMPA DE TRÁS PARA FRENTE (DESLOCAMENTO MÁXIMO)
@@ -412,7 +420,7 @@ mapa_caracters: 	.byte 	0X40,0x30,0x31,0x32		@@,0,1,2
 @CHAVE ESCOLHIDA PARA CRIPTOGRAFIA					
 key:				.byte	0x01,0x03,0x04,0x07 	@CHAVE DE CRIPTOGRAFIA
 					.byte	0x01,0x01,0x01,0x08		@1347 1118 2947 7613
-					.byte	0x02,0x09,0x04,0x07		@FIBONACCI COM 1 E 3 ATÉ 16 CHAR EXCLUIDO O ULTIMO 2
+					.byte	0x02,0x09,0x04,0x07		@FIBONACCI COM 1 E 3 ATÉ 16 CHAR EXCLUINDO O ULTIMO 2
 					.byte	0x07,0x06,0x01,0x03		@BY RAFAEL
 					
 @=============================== MENSAGENS PARA EXIBIÇÃO NO CONSOLE ==============================
@@ -421,7 +429,7 @@ intro_msg:
 	.ascii "\n ===================================================================================="
 	.ascii "\n ------------------------------------------"
 	.ascii "\n  TRABALHO DE ORGANIZACAO DE COMPUTADORES\n"
-	.ascii "\t\t    ARM\n"
+	.ascii "\t\t   ARM7\n"
 	.ascii " ------------------------------------------\n"
 	.ascii "\n\n INFORME A MENSAGEM A SER CRIPTOGRAFADA (128 CARACTERES).\n"
 size_intro_msg = . - intro_msg	

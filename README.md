@@ -26,6 +26,10 @@ O trabalho será realizado por:
 	- Eduardo Stefanello
 
 A entrega e apresentação na data: 31/05/2017
+
+OBS.: 	Para entender com maior facilidade funcionamento da criptografia 
+		deve-se ler o arquivo "funcionamento_da_criptografia.pdf"
+		na pasta "documentação" deste repositório. 
 ____________________________________________________
 
 =================== INSTRUÇÕES =====================
@@ -55,6 +59,8 @@ ____________________________________________________
 	Windows:
 
 			java -jar armsim.jar -c -l test -d devices.txt
+
+OU .... sem alterar nenhum arquivo e utilizando Windows, execute o arquivo start.bat			
 			
 - No simulador, execute "g _start" para iniciar a simulção.
 - Caso tenha dúvidas com o simulador, execute 'h' para ver as opções de Help.
